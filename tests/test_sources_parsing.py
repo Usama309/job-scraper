@@ -3,6 +3,7 @@ from __future__ import annotations
 import responses
 
 from src.sources.adzuna import AdzunaSource
+from src.sources.indeed import IndeedSource
 from src.sources.jsearch import JSearchSource
 from src.sources.remoteok import RemoteOKSource
 from src.sources.remotive import RemotiveSource
@@ -96,3 +97,19 @@ def test_jsearch_parses_fixture(load_fixture, monkeypatch):
     assert j.source == "JSearch"
     # Underlying publisher tracked
     assert "LinkedIn" in (j.recruiter_contact or "") or "LinkedIn" in (j.description_snippet or "") or True
+
+
+@responses.activate
+def test_indeed_parses_fixture(load_fixture):
+    body = load_fixture("indeed_response.rss")
+    responses.add(
+        responses.GET, "https://www.indeed.com/rss",
+        body=body, status=200, content_type="application/rss+xml",
+    )
+    source = IndeedSource()
+    jobs = source.fetch(keyword="hubspot", time_window_hours=24)
+    assert len(jobs) == 1
+    j = jobs[0]
+    assert "HubSpot" in j.title
+    assert j.company == "Acme"
+    assert j.source == "Indeed"

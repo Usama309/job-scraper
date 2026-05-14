@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+  <title>Indeed</title>
+  <item>
+    <title>HubSpot Administrator - Acme - Remote</title>
+    <link>https://www.indeed.com/viewjob?jk=abc123</link>
+    <description>Remote HubSpot admin role. $80k-$100k/year.</description>
+    <pubDate>Mon, 13 May 2026 10:00:00 GMT</pubDate>
+    <source>Acme</source>
+  </item>
+</channel>
+</rss>
