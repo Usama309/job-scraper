@@ -5,6 +5,7 @@ import responses
 from src.sources.adzuna import AdzunaSource
 from src.sources.indeed import IndeedSource
 from src.sources.jsearch import JSearchSource
+from src.sources.linkedin import LinkedInSource
 from src.sources.remoteok import RemoteOKSource
 from src.sources.remotive import RemotiveSource
 from src.sources.weworkremotely import WeWorkRemotelySource
@@ -113,3 +114,20 @@ def test_indeed_parses_fixture(load_fixture):
     assert "HubSpot" in j.title
     assert j.company == "Acme"
     assert j.source == "Indeed"
+
+
+@responses.activate
+def test_linkedin_parses_fixture(load_fixture):
+    body = load_fixture("linkedin_response.html")
+    responses.add(
+        responses.GET,
+        "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search",
+        body=body, status=200, content_type="text/html",
+    )
+    source = LinkedInSource()
+    jobs = source.fetch(keyword="crm", time_window_hours=24)
+    assert len(jobs) == 2
+    assert jobs[0].title == "CRM Automation Engineer"
+    assert jobs[0].company == "Acme Co"
+    assert jobs[0].source == "LinkedIn"
+    assert "linkedin.com/jobs/view/" in jobs[0].url
