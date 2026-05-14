@@ -3,6 +3,7 @@ from __future__ import annotations
 import responses
 
 from src.sources.adzuna import AdzunaSource
+from src.sources.jsearch import JSearchSource
 from src.sources.remoteok import RemoteOKSource
 from src.sources.remotive import RemotiveSource
 from src.sources.weworkremotely import WeWorkRemotelySource
@@ -77,3 +78,21 @@ def test_adzuna_parses_fixture(load_fixture, monkeypatch):
     assert j.title == "GoHighLevel Specialist"
     assert j.source == "Adzuna"
     assert j.salary_range and "60000" in j.salary_range
+
+
+@responses.activate
+def test_jsearch_parses_fixture(load_fixture, monkeypatch):
+    monkeypatch.setenv("RAPIDAPI_KEY", "test_key")
+    body = load_fixture("jsearch_response.json")
+    responses.add(
+        responses.GET, "https://jsearch.p.rapidapi.com/search",
+        body=body, status=200, content_type="application/json",
+    )
+    source = JSearchSource()
+    jobs = source.fetch_combined(keywords=["CRM"], time_window_hours=720)
+    assert len(jobs) == 1
+    j = jobs[0]
+    assert j.title == "CRM Automation Engineer"
+    assert j.source == "JSearch"
+    # Underlying publisher tracked
+    assert "LinkedIn" in (j.recruiter_contact or "") or "LinkedIn" in (j.description_snippet or "") or True

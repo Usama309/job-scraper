@@ -1,0 +1,26 @@
+{
+  "status": "OK",
+  "request_id": "abc",
+  "data": [
+    {
+      "job_id": "jsearch-1",
+      "employer_name": "Acme",
+      "employer_website": "https://acme.com",
+      "job_title": "CRM Automation Engineer",
+      "job_apply_link": "https://linkedin.com/jobs/123",
+      "apply_options": [
+        {"publisher": "LinkedIn", "apply_link": "https://linkedin.com/jobs/123"},
+        {"publisher": "Indeed", "apply_link": "https://indeed.com/viewjob?jk=abc"}
+      ],
+      "job_description": "Remote CRM role...",
+      "job_is_remote": true,
+      "job_posted_at_datetime_utc": "2026-05-13T10:00:00Z",
+      "job_min_salary": 60000,
+      "job_max_salary": 90000,
+      "job_salary_period": "YEAR",
+      "job_city": null,
+      "job_country": "US",
+      "job_employment_type": "FULLTIME"
+    }
+  ]
+}
