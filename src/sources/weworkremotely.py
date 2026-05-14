@@ -44,8 +44,13 @@ class WeWorkRemotelySource:
                 if kw not in title.lower() and kw not in (entry.get("description") or "").lower():
                     continue
                 # WWR titles look like "Company: Role Title (Location)"
-                company, _, rest = title.partition(":")
+                company, sep, rest = title.partition(":")
+                if not sep:
+                    # No "Company: Role" structure — skip rather than emit junk rows
+                    continue
                 role = rest.strip()
+                if not role:
+                    continue
                 m = re.search(r"\(([^)]+)\)\s*$", role)
                 location = m.group(1) if m else "Remote"
                 role_clean = re.sub(r"\s*\([^)]+\)\s*$", "", role).strip()

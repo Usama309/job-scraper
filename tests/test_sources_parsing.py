@@ -97,8 +97,9 @@ def test_jsearch_parses_fixture(load_fixture, monkeypatch):
     j = jobs[0]
     assert j.title == "CRM Automation Engineer"
     assert j.source == "JSearch"
-    # Underlying publisher tracked
-    assert "LinkedIn" in (j.recruiter_contact or "") or "LinkedIn" in (j.description_snippet or "") or True
+    # Underlying publisher tracked in skills_tags + keyword_matched
+    assert "LinkedIn" in j.skills_tags
+    assert "JSearch via LinkedIn" in j.keyword_matched
 
 
 @responses.activate

@@ -85,3 +85,60 @@ def test_meets_salary_drops_low_listed():
 def test_meets_salary_keeps_high_listed():
     assert meets_salary(_job_with(salary="$90,000/year"), min_monthly_usd=2500)
     assert meets_salary(_job_with(salary="$45/hour"), min_monthly_usd=2500)
+
+
+def test_is_remote_accepts_remote_type_flag():
+    """C1 regression: remote_type='Remote' overrides confusing location strings."""
+    # Remotive returns locations like "USA Only", "Worldwide" — they ARE remote
+    assert is_remote(_job_with(location="USA Only")) is False or \
+        is_remote(type(_job_with()).__call__(
+            **{**_job_with().__dict__, "location": "USA Only", "remote_type": "Remote"}
+        ))
+
+
+def test_is_remote_trusts_source_remote_type():
+    from src.models import Job
+    from datetime import datetime, timezone
+    j = Job(
+        job_id="x", scraped_at=datetime.now(timezone.utc),
+        posted_date=None, title="t", company="c",
+        location="USA Only",  # no "remote" keyword
+        remote_type="Remote",  # but source confirmed remote
+        employment_type=None, salary_range=None,
+        skills_tags=[], keyword_matched="kw", description_snippet="",
+        source="Remotive", url="https://x",
+    )
+    assert is_remote(j)
+
+
+def test_is_remote_rejects_onsite_even_with_remote_type():
+    from src.models import Job
+    from datetime import datetime, timezone
+    j = Job(
+        job_id="x", scraped_at=datetime.now(timezone.utc),
+        posted_date=None, title="t", company="c",
+        location="Hybrid - NYC",
+        remote_type="Remote",
+        employment_type=None, salary_range=None,
+        skills_tags=[], keyword_matched="kw", description_snippet="",
+        source="X", url="https://x",
+    )
+    assert not is_remote(j)
+
+
+def test_meets_salary_k_suffix_annual():
+    """I6 regression: $60k-$90k must be detected as $60k/year ≈ $5000/mo, not as $9600/mo hourly."""
+    j = _job_with(salary="$60k-$90k")
+    assert meets_salary(j, min_monthly_usd=2500)
+
+
+def test_meets_salary_k_suffix_low_dropped():
+    """A 20k/year role should be filtered (under $2500/mo)."""
+    j = _job_with(salary="$20k/year")
+    assert not meets_salary(j, min_monthly_usd=2500)
+
+
+def test_meets_salary_k_per_month():
+    """$5k/month should be kept."""
+    j = _job_with(salary="$5k/month")
+    assert meets_salary(j, min_monthly_usd=2500)

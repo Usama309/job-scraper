@@ -30,6 +30,19 @@ SCHEDULE_TO_SOURCES = {
               "linkedin", "indeed", "glassdoor"],
 }
 
+# Canonical source NAME per lowercase key — used on error path so counts and Run Log align.
+# These MUST match each source class's NAME attribute exactly.
+SOURCE_NAMES = {
+    "remotive": "Remotive",
+    "remoteok": "RemoteOK",
+    "weworkremotely": "WeWorkRemotely",
+    "adzuna": "Adzuna",
+    "jsearch": "JSearch",
+    "linkedin": "LinkedIn",
+    "indeed": "Indeed",
+    "glassdoor": "Glassdoor",
+}
+
 
 def parse_args(argv=None):
     p = argparse.ArgumentParser()
@@ -97,7 +110,7 @@ def run(window: str, sources: str, trigger: str = "manual"):
             err = f"{src_name}: {type(e).__name__}: {e}"
             log.warning(err)
             errors.append(err)
-            counts[src_name.title()] = 0
+            counts[SOURCE_NAMES[src_name]] = 0
 
     # Filter
     filtered = [

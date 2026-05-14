@@ -5,6 +5,17 @@ from typing import List
 import gspread
 
 
+def _sanitize_cell(v):
+    """Prevent CSV/formula injection: prefix leading =+-@ with apostrophe."""
+    if isinstance(v, str) and v and v[0] in ("=", "+", "-", "@"):
+        return "'" + v
+    return v
+
+
+def _sanitize_row(row):
+    return [_sanitize_cell(v) for v in row]
+
+
 EXPECTED_TABS = [
     "All Jobs",
     "LinkedIn",
@@ -54,7 +65,7 @@ class SheetsClient:
         if not rows:
             return
         ws = self.sheet.worksheet(tab)
-        ws.append_rows(rows, value_input_option="USER_ENTERED")
+        ws.append_rows([_sanitize_row(r) for r in rows], value_input_option="USER_ENTERED")
 
     def upsert_to_master(self, jobs: List["Job"]) -> tuple[int, int]:
         """Upsert jobs into 'All Jobs' tab. Returns (new_count, updated_count).
@@ -94,7 +105,7 @@ class SheetsClient:
                 id_to_row[job.job_id] = len(existing) + len(new_rows) + 1
 
         if new_rows:
-            ws.append_rows(new_rows, value_input_option="USER_ENTERED")
+            ws.append_rows([_sanitize_row(r) for r in new_rows], value_input_option="USER_ENTERED")
         return len(new_rows), updates
 
     def write_run_log(self, stats: dict):

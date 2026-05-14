@@ -60,7 +60,15 @@ def is_within_window(job: Job, hours: int) -> bool:
 
 
 def is_remote(job: Job) -> bool:
-    """True if job location indicates remote."""
+    """True if the source flagged remote, OR location indicates remote."""
+    # Sources set remote_type="Remote" when they've confirmed the role is remote
+    # (e.g., Remotive's whole API is remote-only; Adzuna queries were filtered by where=remote).
+    # Trust that signal first — many locations are "USA Only", "Worldwide", "New York" etc.
+    if job.remote_type == "Remote":
+        loc = (job.location or "").lower()
+        if any(b in loc for b in _ONSITE_BLOCKERS if "remote" not in loc):
+            return False
+        return True
     loc = (job.location or "").lower()
     if any(b in loc for b in _ONSITE_BLOCKERS if "remote" not in loc):
         return False
@@ -70,15 +78,26 @@ def is_remote(job: Job) -> bool:
 _SALARY_NUM_RE = re.compile(r"[\d,]+(?:\.\d+)?")
 
 
+_SALARY_K_RE = re.compile(r"(\d+(?:\.\d+)?)\s*[kK]\b")
+
+
 def _parse_salary_to_monthly_usd(s: str) -> float | None:
     """Best-effort parse: detect /year /month /hour and return monthly USD floor."""
     if not s:
         return None
+    low_lower = s.lower()
+    # First: detect "k" suffix (e.g., "$60k-$90k") — these are always annual thousands
+    k_matches = _SALARY_K_RE.findall(s)
+    if k_matches:
+        low = min(float(n) for n in k_matches) * 1000
+        # k suffix is virtually always annual unless explicitly /mo
+        if "month" in low_lower or "/mo" in low_lower:
+            return low
+        return low / 12
     nums = [float(n.replace(",", "")) for n in _SALARY_NUM_RE.findall(s)]
     if not nums:
         return None
     low = min(nums)
-    low_lower = s.lower()
     if "hour" in low_lower or "/hr" in low_lower:
         return low * 160  # 40h/wk × 4wk
     if "month" in low_lower or "/mo" in low_lower:
