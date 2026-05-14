@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.usama.job-scraper-local</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/zsh</string>
+        <string>-c</string>
+        <string>cd /Users/mc/Documents/GitHub/job-scraper &amp;&amp; ./.venv/bin/python3 scripts/scrape_local.py --window 6h --sources both --max-keywords 15</string>
+    </array>
+
+    <key>StartCalendarInterval</key>
+    <array>
+        <!-- Run at 17 minutes past each hour, offset from GH Actions hourly cron -->
+        <dict>
+            <key>Minute</key>
+            <integer>17</integer>
+        </dict>
+    </array>
+
+    <key>StandardOutPath</key>
+    <string>/Users/mc/Documents/GitHub/job-scraper/.launchd.stdout.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/mc/Documents/GitHub/job-scraper/.launchd.stderr.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+</dict>
+</plist>

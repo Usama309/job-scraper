@@ -20,3 +20,7 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Launchd local cron logs
+.launchd.stdout.log
+.launchd.stderr.log
