@@ -1,0 +1,26 @@
+{
+  "indeed_domains": {
+    "United States": "www.indeed.com",
+    "United Kingdom": "uk.indeed.com",
+    "Germany": "de.indeed.com",
+    "France": "fr.indeed.com",
+    "Netherlands": "nl.indeed.com",
+    "Ireland": "ie.indeed.com",
+    "United Arab Emirates": "ae.indeed.com",
+    "Saudi Arabia": "sa.indeed.com",
+    "Qatar": "qa.indeed.com",
+    "Bahrain": "bh.indeed.com",
+    "Kuwait": "kw.indeed.com"
+  },
+  "glassdoor_domains": {
+    "United States": "www.glassdoor.com",
+    "United Kingdom": "www.glassdoor.co.uk",
+    "Germany": "www.glassdoor.de",
+    "France": "www.glassdoor.fr",
+    "Netherlands": "www.glassdoor.nl",
+    "Ireland": "www.glassdoor.ie"
+  },
+  "adzuna_countries": ["us", "gb", "de", "fr", "nl", "ie"],
+  "bayt_enabled": true,
+  "comments": "Indeed has subdomains for all 11 countries. Glassdoor + Adzuna only for the 6 western markets. Gulf coverage comes from Indeed subdomains + Bayt.com."
+}

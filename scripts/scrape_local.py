@@ -40,19 +40,23 @@ from src.filters import is_within_window, is_remote, meets_salary  # noqa: E402
 from src.main import WINDOW_TO_HOURS, load_keywords, load_filters  # noqa: E402
 from src.notify import NtfyClient  # noqa: E402
 from src.sheets import SheetsClient  # noqa: E402
+from src.sources.bayt_browser import BaytBrowserSource  # noqa: E402
 from src.sources.glassdoor_browser import GlassdoorBrowserSource  # noqa: E402
 from src.sources.indeed_browser import IndeedBrowserSource  # noqa: E402
 
 
 log = logging.getLogger("scrape_local")
 
+ALL_SOURCES = ["indeed", "glassdoor", "bayt"]
+
 
 def parse_args(argv=None):
     p = argparse.ArgumentParser()
     p.add_argument("--window", default="24h", choices=list(WINDOW_TO_HOURS))
-    p.add_argument("--sources", default="both", choices=["both", "indeed", "glassdoor"])
-    p.add_argument("--max-keywords", type=int, default=10,
-                   help="Cap keyword count to avoid long runs (default 10).")
+    p.add_argument("--sources", default="all",
+                   choices=["all", "indeed", "glassdoor", "bayt"])
+    p.add_argument("--max-keywords", type=int, default=8,
+                   help="Cap keyword count (multi-country runs scale O(keywords × countries)). Default 8.")
     return p.parse_args(argv)
 
 
@@ -61,6 +65,8 @@ def _instantiate(name: str):
         return IndeedBrowserSource()
     if name == "glassdoor":
         return GlassdoorBrowserSource()
+    if name == "bayt":
+        return BaytBrowserSource()
     raise ValueError(name)
 
 
@@ -72,7 +78,7 @@ def run(window: str, sources_choice: str, max_keywords: int) -> dict:
     filters_cfg = load_filters()
     salary_floor = filters_cfg["salary"]["min_monthly_usd"]
 
-    source_names = ["indeed", "glassdoor"] if sources_choice == "both" else [sources_choice]
+    source_names = ALL_SOURCES if sources_choice == "all" else [sources_choice]
     counts: dict[str, int] = {}
     errors: list[str] = []
     all_jobs = []
@@ -114,15 +120,19 @@ def run(window: str, sources_choice: str, max_keywords: int) -> dict:
     sc = SheetsClient(creds=creds, sheet_id=os.environ["GOOGLE_SHEET_ID"])
     sc.ensure_tabs()
 
-    in_rows, gd_rows = [], []
+    in_rows, gd_rows, api_rows = [], [], []
     for j in filtered:
         row = j.to_sheet_row()
         if j.source == "Indeed":
             in_rows.append(row)
         elif j.source == "Glassdoor":
             gd_rows.append(row)
+        elif j.source == "Bayt":
+            # Bayt is a regional aggregator — group with API Sources tab
+            api_rows.append(row)
     sc.append_to_tab("Indeed", in_rows)
     sc.append_to_tab("Glassdoor", gd_rows)
+    sc.append_to_tab("API Sources", api_rows)
     new_count, _ = sc.upsert_to_master(deduped)
 
     ended = datetime.now(timezone.utc)
