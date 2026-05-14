@@ -117,3 +117,36 @@ def test_upsert_never_overwrites_columns_v_to_z(mock_sa):
     for call in mock_ws.update_cell.call_args_list:
         _, col, _ = call.args
         assert col < 22 or col > 26, f"Operator column {col} was overwritten"
+
+
+@patch("src.sheets.gspread.service_account_from_dict")
+def test_write_run_log_appends_19_columns(mock_sa):
+    mock_ws = MagicMock()
+    mock_sheet = MagicMock()
+    mock_sheet.worksheet.return_value = mock_ws
+    mock_sa.return_value.open_by_key.return_value = mock_sheet
+
+    client = SheetsClient(creds={}, sheet_id="x")
+    stats = {
+        "started": "2026-05-13 14:00",
+        "ended": "2026-05-13 14:01",
+        "duration_sec": 60,
+        "trigger": "manual",
+        "time_window": "6h",
+        "counts": {"LinkedIn": 10, "Indeed": 20, "Glassdoor": 0,
+                   "Remotive": 5, "RemoteOK": 3, "WeWorkRemotely": 2,
+                   "Adzuna": 0, "JSearch": 0},
+        "after_dedup": 35,
+        "new_jobs": 12,
+        "errors": "",
+        "adzuna_quota": "42/250",
+        "jsearch_quota": "18/150",
+        "status": "OK",
+    }
+    client.write_run_log(stats)
+
+    mock_sheet.worksheet.assert_called_with("Run Log")
+    row = mock_ws.append_row.call_args.args[0]
+    assert len(row) == 19
+    assert row[3] == "manual"  # Trigger column D
+    assert row[18] == "OK"     # Status column S

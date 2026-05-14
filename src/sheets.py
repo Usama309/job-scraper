@@ -96,3 +96,29 @@ class SheetsClient:
         if new_rows:
             ws.append_rows(new_rows, value_input_option="USER_ENTERED")
         return len(new_rows), updates
+
+    def write_run_log(self, stats: dict):
+        ws = self.sheet.worksheet("Run Log")
+        c = stats.get("counts", {})
+        row = [
+            stats.get("started", ""),
+            stats.get("ended", ""),
+            stats.get("duration_sec", 0),
+            stats.get("trigger", ""),
+            stats.get("time_window", ""),
+            c.get("LinkedIn", 0),
+            c.get("Indeed", 0),
+            c.get("Glassdoor", 0),
+            c.get("Remotive", 0),
+            c.get("RemoteOK", 0),
+            c.get("WeWorkRemotely", 0),
+            c.get("Adzuna", 0),
+            c.get("JSearch", 0),
+            stats.get("after_dedup", 0),
+            stats.get("new_jobs", 0),
+            stats.get("errors", ""),
+            stats.get("adzuna_quota", ""),
+            stats.get("jsearch_quota", ""),
+            stats.get("status", ""),
+        ]
+        ws.append_row(row, value_input_option="USER_ENTERED")
