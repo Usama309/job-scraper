@@ -16,18 +16,27 @@ class RemoteOKSource:
         self.http = http or HTTPClient()
 
     def fetch(self, *, keyword: str, time_window_hours: int) -> List[Job]:
-        # RemoteOK requires a real-looking UA. HTTPClient sets one by default.
-        r = self.http.get(self.ENDPOINT, params={"tags": keyword.lower()})
+        # RemoteOK's ?tags filter is too strict (often returns 0 results).
+        # Fetch full feed and client-side filter by keyword in title/description/tags.
+        r = self.http.get(self.ENDPOINT)
         r.raise_for_status()
         payload = r.json()
         jobs: List[Job] = []
-        # First element is legal-metadata; skip dicts without 'position'.
+        kw_lower = keyword.lower()
         for raw in payload:
             if not isinstance(raw, dict) or "position" not in raw:
                 continue
             title = raw.get("position") or ""
             company = raw.get("company") or ""
             if not title or not company:
+                continue
+            # Match keyword in title, description, or tags
+            haystack = (
+                title.lower() + " "
+                + (raw.get("description") or "").lower() + " "
+                + " ".join(raw.get("tags") or []).lower()
+            )
+            if kw_lower not in haystack:
                 continue
             sal_min = raw.get("salary_min")
             sal_max = raw.get("salary_max")

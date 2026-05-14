@@ -27,7 +27,9 @@ class AdzunaSource:
             "app_key": self.app_key,
             "results_per_page": 50,
             "what_or": " ".join(keywords),
-            "where": "remote",
+            # NOTE: Adzuna's `where=remote` filter matches a city named "Remote",
+            # not work mode — it returns 0 results. Drop it; downstream is_remote()
+            # will catch non-remote jobs based on title/description.
             "max_days_old": max(1, time_window_hours // 24 or 1),
         }
         r = self.http.get(self.ENDPOINT, params=params)
@@ -39,7 +41,19 @@ class AdzunaSource:
             company = (raw.get("company") or {}).get("display_name") or ""
             if not title or not company:
                 continue
-            loc = (raw.get("location") or {}).get("display_name") or "Remote"
+            loc = (raw.get("location") or {}).get("display_name") or ""
+            desc = raw.get("description") or ""
+            # Adzuna doesn't tag remote in API; infer from title/description/location.
+            looks_remote = (
+                "remote" in title.lower()
+                or "remote" in loc.lower()
+                or "remote" in desc.lower()[:500]
+                or "work from home" in desc.lower()[:500]
+            )
+            if not looks_remote:
+                continue
+            # Normalize location: include "Remote" prefix so downstream is_remote() matches
+            loc = loc if "remote" in loc.lower() else (f"Remote ({loc})" if loc else "Remote")
             sal_min = raw.get("salary_min")
             sal_max = raw.get("salary_max")
             salary = f"{sal_min}-{sal_max}" if sal_min and sal_max else (str(sal_min or sal_max) if (sal_min or sal_max) else None)
