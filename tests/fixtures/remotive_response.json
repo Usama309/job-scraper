@@ -1,0 +1,19 @@
+{
+  "0-legal-notice": "Remotive...",
+  "job-count": 1,
+  "jobs": [
+    {
+      "id": 1234,
+      "url": "https://remotive.com/remote-jobs/sales/example-1234",
+      "title": "HubSpot Specialist",
+      "company_name": "Acme",
+      "category": "Sales",
+      "tags": ["hubspot", "crm"],
+      "job_type": "full_time",
+      "publication_date": "2026-05-13T10:00:00",
+      "candidate_required_location": "Anywhere",
+      "salary": "$60,000 - $80,000",
+      "description": "<p>We are looking for a HubSpot specialist...</p>"
+    }
+  ]
+}
