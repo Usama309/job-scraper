@@ -49,3 +49,9 @@ class SheetsClient:
                 ws = self.sheet.add_worksheet(title=tab, rows=rows, cols=cols)
                 headers: List[str] = RUN_LOG_HEADERS if tab == "Run Log" else MASTER_HEADERS
                 ws.update("A1", [headers])
+
+    def append_to_tab(self, tab: str, rows: List[List[str]]):
+        if not rows:
+            return
+        ws = self.sheet.worksheet(tab)
+        ws.append_rows(rows, value_input_option="USER_ENTERED")
