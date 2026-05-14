@@ -5,6 +5,15 @@ from typing import List
 import gspread
 
 
+def _a1(row: int, col: int) -> str:
+    """Convert (row, col) 1-indexed to A1 notation. col=1->'A', col=27->'AA', etc."""
+    label = ""
+    while col > 0:
+        col, rem = divmod(col - 1, 26)
+        label = chr(65 + rem) + label
+    return f"{label}{row}"
+
+
 def _sanitize_cell(v):
     """Prevent CSV/formula injection: prefix leading =+-@ with apostrophe."""
     if isinstance(v, str) and v and v[0] in ("=", "+", "-", "@"):
@@ -81,7 +90,9 @@ class SheetsClient:
                 id_to_row[row[0]] = i
 
         new_rows: List[List[str]] = []
+        batch_updates: List[dict] = []
         updates = 0
+        URL_COL_BY_SOURCE = {"LinkedIn": 16, "Indeed": 17, "Glassdoor": 18}
         for job in jobs:
             if job.job_id in id_to_row:
                 row_idx = id_to_row[job.job_id]
@@ -91,19 +102,19 @@ class SheetsClient:
                 if job.source not in sources_list:
                     sources_list.append(job.source)
                     merged = ", ".join(sources_list)
-                    ws.update_cell(row_idx, 14, merged)
+                    batch_updates.append({"range": _a1(row_idx, 14), "values": [[_sanitize_cell(merged)]]})
                 # Update LinkedIn / Indeed / Glassdoor URL columns (P=16, Q=17, R=18)
-                if job.source == "LinkedIn":
-                    ws.update_cell(row_idx, 16, job.url)
-                elif job.source == "Indeed":
-                    ws.update_cell(row_idx, 17, job.url)
-                elif job.source == "Glassdoor":
-                    ws.update_cell(row_idx, 18, job.url)
+                url_col = URL_COL_BY_SOURCE.get(job.source)
+                if url_col:
+                    batch_updates.append({"range": _a1(row_idx, url_col), "values": [[_sanitize_cell(job.url)]]})
                 updates += 1
             else:
                 new_rows.append(job.to_sheet_row())
                 id_to_row[job.job_id] = len(existing) + len(new_rows) + 1
 
+        # Batch all updates into a single API call (avoids 60 writes/min quota)
+        if batch_updates:
+            ws.batch_update(batch_updates, value_input_option="USER_ENTERED")
         if new_rows:
             ws.append_rows([_sanitize_row(r) for r in new_rows], value_input_option="USER_ENTERED")
         return len(new_rows), updates

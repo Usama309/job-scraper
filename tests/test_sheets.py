@@ -93,8 +93,10 @@ def test_upsert_merges_sources_for_existing_job(mock_sa):
 
     # Should NOT append a new row
     mock_ws.append_rows.assert_not_called()
-    # Should update Source Platforms column (N = col 14)
-    mock_ws.update_cell.assert_any_call(2, 14, "LinkedIn, Indeed")
+    # Should batch_update with Source Platforms (column N = col 14, A1: "N2")
+    mock_ws.batch_update.assert_called_once()
+    batch_arg = mock_ws.batch_update.call_args.args[0]
+    assert any(u["range"] == "N2" and u["values"] == [["LinkedIn, Indeed"]] for u in batch_arg)
 
 
 @patch("src.sheets.gspread.service_account_from_dict")
@@ -113,10 +115,16 @@ def test_upsert_never_overwrites_columns_v_to_z(mock_sa):
     client = SheetsClient(creds={}, sheet_id="x")
     client.upsert_to_master([_make_job("aaa", "T", "C", source="Indeed")])
 
-    # Verify no update_cell call touched columns 22-26 (V-Z)
-    for call in mock_ws.update_cell.call_args_list:
-        _, col, _ = call.args
-        assert col < 22 or col > 26, f"Operator column {col} was overwritten"
+    # Verify no batch_update range touched columns V-Z (V2..Z2 etc.)
+    for call in mock_ws.batch_update.call_args_list:
+        updates = call.args[0]
+        for u in updates:
+            a1 = u["range"]
+            # Extract column letters from A1 (e.g. "N2" -> "N", "AA10" -> "AA")
+            col_letters = "".join(c for c in a1 if c.isalpha())
+            assert col_letters not in ("V", "W", "X", "Y", "Z"), (
+                f"Operator column {col_letters} was overwritten via {a1}"
+            )
 
 
 @patch("src.sheets.gspread.service_account_from_dict")
