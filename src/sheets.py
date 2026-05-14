@@ -55,3 +55,44 @@ class SheetsClient:
             return
         ws = self.sheet.worksheet(tab)
         ws.append_rows(rows, value_input_option="USER_ENTERED")
+
+    def upsert_to_master(self, jobs: List["Job"]) -> tuple[int, int]:
+        """Upsert jobs into 'All Jobs' tab. Returns (new_count, updated_count).
+        Never touches columns V-Z (22-26): operator-owned.
+        """
+        from src.models import Job  # local import to avoid circular
+        ws = self.sheet.worksheet("All Jobs")
+        existing = ws.get_all_values()
+        # Map: job_id -> row index (1-based, matching gspread)
+        id_to_row: dict[str, int] = {}
+        for i, row in enumerate(existing[1:], start=2):
+            if row and row[0]:
+                id_to_row[row[0]] = i
+
+        new_rows: List[List[str]] = []
+        updates = 0
+        for job in jobs:
+            if job.job_id in id_to_row:
+                row_idx = id_to_row[job.job_id]
+                # Read existing Source Platforms (column N = 14)
+                current_sources = existing[row_idx - 1][13] if len(existing[row_idx - 1]) > 13 else ""
+                sources_list = [s.strip() for s in current_sources.split(",") if s.strip()]
+                if job.source not in sources_list:
+                    sources_list.append(job.source)
+                    merged = ", ".join(sources_list)
+                    ws.update_cell(row_idx, 14, merged)
+                # Update LinkedIn / Indeed / Glassdoor URL columns (P=16, Q=17, R=18)
+                if job.source == "LinkedIn":
+                    ws.update_cell(row_idx, 16, job.url)
+                elif job.source == "Indeed":
+                    ws.update_cell(row_idx, 17, job.url)
+                elif job.source == "Glassdoor":
+                    ws.update_cell(row_idx, 18, job.url)
+                updates += 1
+            else:
+                new_rows.append(job.to_sheet_row())
+                id_to_row[job.job_id] = len(existing) + len(new_rows) + 1
+
+        if new_rows:
+            ws.append_rows(new_rows, value_input_option="USER_ENTERED")
+        return len(new_rows), updates
