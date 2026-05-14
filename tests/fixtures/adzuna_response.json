@@ -1,0 +1,18 @@
+{
+  "count": 1,
+  "results": [
+    {
+      "id": "1234",
+      "title": "GoHighLevel Specialist",
+      "company": {"display_name": "Acme Co"},
+      "location": {"display_name": "Remote, US", "area": ["US"]},
+      "created": "2026-05-13T10:00:00Z",
+      "redirect_url": "https://www.adzuna.com/jobs/1234",
+      "description": "We need a GoHighLevel expert...",
+      "salary_min": 60000,
+      "salary_max": 90000,
+      "salary_is_predicted": "0",
+      "contract_type": "permanent"
+    }
+  ]
+}

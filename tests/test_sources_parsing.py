@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import responses
 
+from src.sources.adzuna import AdzunaSource
 from src.sources.remoteok import RemoteOKSource
 from src.sources.remotive import RemotiveSource
 from src.sources.weworkremotely import WeWorkRemotelySource
@@ -57,3 +58,22 @@ def test_wwr_parses_fixture(load_fixture):
     j = jobs[0]
     assert "HubSpot" in j.title or "hubspot" in j.title.lower()
     assert j.source == "WeWorkRemotely"
+
+
+@responses.activate
+def test_adzuna_parses_fixture(load_fixture, monkeypatch):
+    monkeypatch.setenv("ADZUNA_APP_ID", "test_id")
+    monkeypatch.setenv("ADZUNA_APP_KEY", "test_key")
+    body = load_fixture("adzuna_response.json")
+    responses.add(
+        responses.GET,
+        "https://api.adzuna.com/v1/api/jobs/us/search/1",
+        body=body, status=200, content_type="application/json",
+    )
+    source = AdzunaSource()
+    jobs = source.fetch_combined(keywords=["GoHighLevel", "HubSpot"], time_window_hours=720)
+    assert len(jobs) == 1
+    j = jobs[0]
+    assert j.title == "GoHighLevel Specialist"
+    assert j.source == "Adzuna"
+    assert j.salary_range and "60000" in j.salary_range
