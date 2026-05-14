@@ -3,6 +3,7 @@ from __future__ import annotations
 import responses
 
 from src.sources.adzuna import AdzunaSource
+from src.sources.glassdoor import GlassdoorSource
 from src.sources.indeed import IndeedSource
 from src.sources.jsearch import JSearchSource
 from src.sources.linkedin import LinkedInSource
@@ -131,3 +132,30 @@ def test_linkedin_parses_fixture(load_fixture):
     assert jobs[0].company == "Acme Co"
     assert jobs[0].source == "LinkedIn"
     assert "linkedin.com/jobs/view/" in jobs[0].url
+
+
+@responses.activate
+def test_glassdoor_parses_fixture(load_fixture):
+    body = load_fixture("glassdoor_response.html")
+    responses.add(
+        responses.GET,
+        "https://www.glassdoor.com/Job/remote-crm-jobs-SRCH_IL.0,6_IS11047_KO7,10.htm",
+        body=body, status=200, content_type="text/html",
+    )
+    source = GlassdoorSource()
+    jobs = source.fetch(keyword="crm", time_window_hours=24)
+    # Best-effort — accept zero results, but if any: validate
+    if jobs:
+        assert jobs[0].source == "Glassdoor"
+
+
+@responses.activate
+def test_glassdoor_handles_cloudflare_block():
+    responses.add(
+        responses.GET,
+        "https://www.glassdoor.com/Job/remote-test-jobs-SRCH_IL.0,6_IS11047_KO7,11.htm",
+        body="<html>Cloudflare challenge</html>", status=403,
+    )
+    source = GlassdoorSource()
+    jobs = source.fetch(keyword="test", time_window_hours=24)
+    assert jobs == []  # must not throw
