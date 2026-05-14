@@ -1,0 +1,12 @@
+{
+  "sources": {
+    "remotive":       {"tier": 1, "schedule": "hourly", "tab": "API Sources"},
+    "remoteok":       {"tier": 1, "schedule": "hourly", "tab": "API Sources"},
+    "weworkremotely": {"tier": 1, "schedule": "hourly", "tab": "API Sources"},
+    "adzuna":         {"tier": 1, "schedule": "6h",     "tab": "API Sources", "quota_monthly": 250},
+    "jsearch":        {"tier": 1, "schedule": "12h",    "tab": "API Sources", "quota_monthly": 150},
+    "linkedin":       {"tier": 2, "schedule": "hourly", "tab": "LinkedIn"},
+    "indeed":         {"tier": 2, "schedule": "hourly", "tab": "Indeed"},
+    "glassdoor":      {"tier": 2, "schedule": "hourly", "tab": "Glassdoor"}
+  }
+}

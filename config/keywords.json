@@ -1,0 +1,8 @@
+{
+  "categories": {
+    "crm_platforms": ["GoHighLevel", "GHL", "HubSpot", "HubSpot admin", "HubSpot consultant", "HubSpot specialist", "Salesforce admin", "Pipedrive", "Zoho CRM", "Keap", "ActiveCampaign"],
+    "automation_tools": ["Zapier", "Zapier specialist", "n8n", "Make.com", "Make specialist", "Workato", "Tray.io", "Power Automate"],
+    "roles": ["CRM specialist", "CRM administrator", "CRM engineer", "CRM implementation", "CRM consultant", "Automation engineer", "Automation specialist", "Workflow automation", "Process automation", "AI automation", "AI agent developer", "AI bot developer", "Chatbot developer", "Voicebot developer", "Sales operations", "RevOps", "Revenue operations", "Client success", "Customer success specialist", "Customer success manager", "Sales engineer", "Solutions engineer", "Technical account manager", "Implementation specialist", "Marketing automation", "Sales funnel", "Funnel builder", "A2P specialist"],
+    "industry_specific": ["Legal CRM", "Real estate CRM", "Healthcare automation", "Insurance automation"]
+  }
+}

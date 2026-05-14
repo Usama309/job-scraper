@@ -1,0 +1,8 @@
+{
+  "location": {
+    "include_keywords": ["remote", "anywhere", "wfh", "work from home"],
+    "exclude_keywords": ["india only", "pakistan only", "philippines only"]
+  },
+  "salary": {"min_monthly_usd": 2500, "keep_if_unlisted": true},
+  "description_snippet_chars": 300
+}
